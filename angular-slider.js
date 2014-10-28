@@ -2,11 +2,6 @@
  * Created by Derek on 7/31/2014.
  */
 angular.module('vr.directives.slider', []);
-
-/**
- * Created by Derek on 7/31/2014.
- */
-
 angular.module('vr.directives.slider')
   .directive('ngSlider', ['$document', '$compile', '$interpolate', function($document, $compile, $interpolate) {
     return {
@@ -36,9 +31,17 @@ angular.module('vr.directives.slider')
           function cursorPosition(ev, index) {
             var position = -1 * scope.dimensions().sliderOffset;
             if (ctrl.options.vertical) {
-              position += ev.touches[index].pageY || ev.pageY;
+              if (ev.touches) {
+                position += ev.touches[index].pageY;
+              } else {
+                position += ev.pageY;
+              }
             } else {
-              position += ev.touches[index].pageX || ev.pageX;
+              if (ev.touches) {
+                position += ev.touches[index].pageX;
+              } else {
+                position += ev.pageX;
+              }
             }
             return position;
           }
@@ -127,14 +130,15 @@ angular.module('vr.directives.slider')
            */
           scope.onEnd = function(index) {
             // remove the knob from the list of knobs currently being dragged
+            if (!scope.currentKnobs) {
+              return false;
+            }
             var knobs = scope.currentKnobs[index];
-            delete scope.currentKnobs[index];
+            scope.currentKnobs.splice(index, 1);
 
             if (!angular.isArray(knobs)) {
               knobs = [knobs];
             }
-
-            console.log(knobs);
 
             angular.forEach(knobs, function(knob) {
               // fire the knob's onEnd callback
@@ -614,10 +618,10 @@ angular.module('vr.directives.slider')
 
       /**
        * Normalize the value so it adheres to these criteria:
-       * 	- within bounds of the slider
-       * 	- if not continuous, previous and next knobs are <= or >=, respectively
-       * 	- if > 1 step, falls on a step
-       * 	- has the given decimal precision
+       *    - within bounds of the slider
+       *    - if not continuous, previous and next knobs are <= or >=, respectively
+       *    - if > 1 step, falls on a step
+       *    - has the given decimal precision
        * Then fire this knob's onChange callback if the normalized value is the same as the given value
        * @param value {number}
        */
